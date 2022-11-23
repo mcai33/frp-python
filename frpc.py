@@ -55,8 +55,8 @@ class Frpc():
                     else:
                         targetConn = socket.create_connection((self.targethost, self.targetport))
                         workConn = socket.create_connection((self.serverhost,self.serverport))
+                        workConn.sendall(struct.pack('i',2)) # 1 心跳包
                         ConnTool.join(targetConn,workConn)
-                    workConn.sendall(struct.pack('i',2)) # 1 心跳包
                     print("建立工作tcp")
         except IOError as err:  # 非阻塞模式下调用 阻塞操作recv 如果没有数据会抛出异常
             # sel.unregister(conn)
