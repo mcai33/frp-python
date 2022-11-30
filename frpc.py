@@ -16,6 +16,7 @@ class Frpc():
         self.serverport=serverport
         self.server_fd = socket.create_connection((self.serverhost,self.serverport))
         self.server_fd.sendall(struct.pack('i', 1))  # 启动时 首次发送心跳包 1
+        print("启动时 首次发送心跳包 1")
         self.server_fd.setblocking(False)
         sel.register(self.server_fd,selectors.EVENT_READ,self.handle_controller_data)
 
@@ -27,6 +28,7 @@ class Frpc():
         while True:
             if self.server_fd is not None:
                 self.server_fd.send(struct.pack('i', 1))
+                print("发送心跳包 1")
             time.sleep(9)
 
     # 提前把 workConn和targetConn连接起来，需要的时候直接用workConn targetConn不需要缓存
@@ -46,9 +48,9 @@ class Frpc():
             data= server_fd.recv(4)  # data 长度
             if data:
                 cmd = struct.unpack('i',data)[0]
-                print('cmd:',cmd)
+                print('接收到cmd:',cmd)
                 if cmd ==2:  # 要求frpc建立的工作tcp
-                    print('收到frps控制指令')
+                    print('收到frps控制指令：2')
                     # 直接从池子里获取
                     if len(self.workConnPool)>0:
                         workConn = self.workConnPool.pop()
@@ -56,6 +58,7 @@ class Frpc():
                         targetConn = socket.create_connection((self.targethost, self.targetport))
                         workConn = socket.create_connection((self.serverhost,self.serverport))
                         workConn.sendall(struct.pack('i',2)) # 1 心跳包
+                        print('回复消息:',cmd)
                         ConnTool.join(targetConn,workConn)
                     print("建立工作tcp")
         except IOError as err:  # 非阻塞模式下调用 阻塞操作recv 如果没有数据会抛出异常
@@ -84,7 +87,7 @@ if __name__ == '__main__':
         print('Usage: %s remothost [remoteport] targethost [targetport]' % sys.argv[0])
         sys.exit(1)
 
-    sys.stdout = open('forwaring.log', 'w')
+    # sys.stdout = open('forwaring.log', 'w')
     Frpc(remothost,remoteport, targethost,targetport).run()
     print('success started! remote is  %s:%d \t target is %s:%d' % (remothost,remoteport, targethost,targetport))
     # Frpc('192.168.1.101',7000, 'localhost',3389).run()
