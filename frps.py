@@ -30,6 +30,7 @@ class Frps(threading.Thread):
         while True:
             if self.frpc_cmd_conn is not None:
                 self.frpc_cmd_conn.send(struct.pack('i', 1))
+                print("发送心跳包 1")
             time.sleep(9)
 
     # 收到用户tcp 先不接收 向frpc发送指令 让其建立工作tcp
@@ -42,9 +43,10 @@ class Frps(threading.Thread):
             # print(1)
             return
             # time.sleep(0.5)
-        print(2)
+        # print(2)
         try:
             self.frpc_cmd_conn.send(struct.pack('i',2)) # 2建立新的tcp
+            print('发送控制指令：2')
         except IOError as err:  # 非阻塞模式下调用 阻塞操作recv 如果没有数据会抛出异常
             print(err)
             pass
@@ -62,7 +64,7 @@ class Frps(threading.Thread):
             data = frpc_conn.recv(4)  # Should be ready
             if data:
                 cmd = struct.unpack('i',data)[0]
-                print("cmd:",cmd)
+                print("收到客户端cmd:",cmd)
                 if cmd ==2:  # 是建立的工作tcp
                     sel.unregister(frpc_conn) # 不再监听
                     userConn = self.userConns.pop() # 从队列中选一个用户线程来处理
